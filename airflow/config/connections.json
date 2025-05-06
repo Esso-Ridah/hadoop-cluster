@@ -1,0 +1,37 @@
+[
+  {
+    "conn_id": "hdfs_default",
+    "conn_type": "hdfs",
+    "host": "namenode",
+    "port": 8020,
+    "login": "airflow",
+    "extra": {
+      "use_kerberos": false
+    }
+  },
+  {
+    "conn_id": "webhdfs_default",
+    "conn_type": "webhdfs",
+    "host": "namenode",
+    "port": 9870,
+    "login": "airflow",
+    "extra": {
+      "use_kerberos": false
+    }
+  },
+  {
+    "conn_id": "hive_default",
+    "conn_type": "hive",
+    "host": "hive-server",
+    "port": 10000,
+    "login": "airflow",
+    "schema": "default"
+  },
+  {
+    "conn_id": "spark_default",
+    "conn_type": "spark",
+    "host": "spark-master",
+    "port": 7077,
+    "extra": "{\"queue\": \"default\", \"deploy-mode\": \"cluster\"}"
+  }
+] 

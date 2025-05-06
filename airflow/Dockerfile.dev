@@ -1,0 +1,51 @@
+FROM apache/airflow:2.7.1
+
+USER root
+
+# Install system dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        krb5-config \
+        libkrb5-dev \
+        libsasl2-dev \
+        libsasl2-modules-gssapi-mit \
+        gcc \
+        python3-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create necessary directories
+RUN mkdir -p /opt/airflow/{dags,logs,plugins,config,scripts} \
+    && chown -R airflow:root /opt/airflow
+
+# Copy all files first
+COPY requirements.txt /tmp/requirements.txt
+COPY scripts/entrypoint.sh /opt/airflow/scripts/
+COPY scripts/import_connections.py /opt/airflow/scripts/
+COPY config/connections.json /opt/airflow/config/
+
+# Set correct permissions for scripts and requirements
+RUN chmod +x /opt/airflow/scripts/entrypoint.sh \
+    && chown airflow:root /opt/airflow/scripts/entrypoint.sh \
+    && chown airflow:root /opt/airflow/scripts/import_connections.py \
+    && chown airflow:root /opt/airflow/config/connections.json \
+    && chown airflow:root /tmp/requirements.txt \
+    && chmod 644 /tmp/requirements.txt
+
+# Switch to airflow user for pip install
+USER airflow
+
+# Install Python packages as airflow user
+RUN pip install --no-cache-dir \
+    --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.7.1/constraints-3.8.txt" \
+    apache-airflow-providers-apache-hdfs[kerberos] \
+    apache-airflow-providers-apache-hive[kerberos] \
+    apache-airflow-providers-apache-spark[kerberos] \
+    apache-airflow-providers-postgres \
+    requests-kerberos \
+    gssapi \
+    'hdfs[avro,dataframe]>=2.5.4'
+
+# Set entrypoint
+ENTRYPOINT ["/opt/airflow/scripts/entrypoint.sh"]
+CMD ["webserver"] 

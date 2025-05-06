@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# Install Oozie
+apt-get update
+apt-get install -y wget tar openjdk-8-jdk
+wget https://archive.apache.org/dist/oozie/5.2.0/oozie-5.2.0.tar.gz
+tar -xzf oozie-5.2.0.tar.gz
+mv oozie-5.2.0 /usr/lib/oozie
+ln -s /usr/lib/oozie/bin/oozie /usr/bin/oozie
+/bin/mkdir -p /oozie/data/derby
+/usr/lib/oozie/bin/oozie-setup.sh sharelib create -fs hdfs://namenode:9000
+/usr/lib/oozie/bin/ooziedb.sh create -sqlfile oozie.sql -run
+echo "Oozie installation completed"
+
+# Start Oozie
+/usr/lib/oozie/bin/oozied.sh run
+EOF
+
+# Rendre les scripts exécutables
+echo "Rendre les scripts exécutables..."
+chmod +x pig/install.sh
+chmod +x mahout/install.sh
+chmod +x oozie/install.sh
+
+# Création des fichiers de configuration de base
+
+# Configuration de base pour Pig
+cat > pig/scripts/example.pig << 'EOF'
+-- Example Pig script
+data = LOAD 'input.txt' USING PigStorage(',') AS (field1:chararray, field2:int);
+filtered = FILTER data BY field2 > 0;
+STORE filtered INTO 'output' USING PigStorage(',');
+EOF
+
+# Configuration de base pour Mahout
+cat > mahout/scripts/example.sh << 'EOF'
+#!/bin/bash
+# Example Mahout script
+mahout seqdirectory -i /mahout/data/input -o /mahout/data/output
+EOF
+chmod +x mahout/scripts/example.sh
+
+# Configuration de base pour Oozie
+cat > oozie/workflows/workflow.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.5" name="example-workflow">
+    <start to="first-job"/>
+    <action name="first-job">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property>
+                    <name>mapred.mapper.class</name>
+                    <value>org.apache.hadoop.mapred.lib.IdentityMapper</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.class</name>
+                    <value>org.apache.hadoop.mapred.lib.IdentityReducer</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+    <kill name="fail">
+        <message>Map/Reduce failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>
+EOF
+
+echo "Oozie installation completed"

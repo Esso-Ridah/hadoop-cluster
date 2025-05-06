@@ -1,0 +1,118 @@
+version: '3'
+services:
+  namenode:
+    image: apache/hadoop:3.3.6
+    container_name: namenode
+    ports:
+      - "9870:9870"  # Web UI
+      - "9000:9000"  # HDFS
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check=false
+      - HDFS_CONF_dfs_replication=3
+      - HDFS_CONF_dfs_permissions_enabled=false
+    volumes:
+      - ./hadoop/namenode:/hadoop/dfs/name
+    networks:
+      - hadoop
+    command: >
+      bash -c "hdfs namenode -format -force &&
+               hdfs --daemon start namenode &&
+               tail -f /dev/null"
+
+  datanode1:
+    image: apache/hadoop:3.3.6
+    container_name: datanode1
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_datanode_data_dir=file:///hadoop/dfs/data
+    volumes:
+      - ./hadoop/datanode1:/hadoop/dfs/data
+    networks:
+      - hadoop
+    command: >
+      bash -c "hdfs --daemon start datanode &&
+               tail -f /dev/null"
+
+  datanode2:
+    image: apache/hadoop:3.3.6
+    container_name: datanode2
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_datanode_data_dir=file:///hadoop/dfs/data
+    volumes:
+      - ./hadoop/datanode2:/hadoop/dfs/data
+    networks:
+      - hadoop
+    command: >
+      bash -c "hdfs --daemon start datanode &&
+               tail -f /dev/null"
+
+  datanode3:
+    image: apache/hadoop:3.3.6
+    container_name: datanode3
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_datanode_data_dir=file:///hadoop/dfs/data
+    volumes:
+      - ./hadoop/datanode3:/hadoop/dfs/data
+    networks:
+      - hadoop
+    command: >
+      bash -c "hdfs --daemon start datanode &&
+               tail -f /dev/null"
+
+  resourcemanager:
+    image: apache/hadoop:3.3.6
+    container_name: resourcemanager
+    ports:
+      - "8088:8088"  # ResourceManager Web UI
+      - "8032:8032"  # ResourceManager
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    networks:
+      - hadoop
+    command: >
+      bash -c "yarn --daemon start resourcemanager &&
+               tail -f /dev/null"
+
+  nodemanager1:
+    image: apache/hadoop:3.3.6
+    container_name: nodemanager1
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    networks:
+      - hadoop
+    command: >
+      bash -c "yarn --daemon start nodemanager &&
+               tail -f /dev/null"
+
+  nodemanager2:
+    image: apache/hadoop:3.3.6
+    container_name: nodemanager2
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    networks:
+      - hadoop
+    command: >
+      bash -c "yarn --daemon start nodemanager &&
+               tail -f /dev/null"
+
+  nodemanager3:
+    image: apache/hadoop:3.3.6
+    container_name: nodemanager3
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    networks:
+      - hadoop
+    command: >
+      bash -c "yarn --daemon start nodemanager &&
+               tail -f /dev/null"
+
+networks:
+  hadoop:
+    driver: bridge

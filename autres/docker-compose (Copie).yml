@@ -1,0 +1,292 @@
+version: '3'
+
+services:
+  # Hadoop Services
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    ports:
+      - "9870:9870"  # Web UI
+      - "9000:9000"  # HDFS
+    environment:
+      - CLUSTER_NAME=hadoop-cluster
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_namenode_name_dir=file:///hadoop/dfs/name
+      - HDFS_CONF_dfs_replication=3
+      - HDFS_CONF_dfs_permissions_enabled=false
+      - HADOOP_CONF_CLUSTER_NAME=hadoop-cluster
+    volumes:
+      - type: bind
+        source: ./hadoop/namenode
+        target: /hadoop/dfs/name
+    networks:
+      - hadoop
+    command: "/entrypoint.sh /run.sh"
+
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode1
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_datanode_data_dir=file:///hadoop/dfs/data
+    volumes:
+      - type: bind
+        source: ./hadoop/datanode1
+        target: /hadoop/dfs/data
+    networks:
+      - hadoop
+    depends_on:
+      - namenode
+
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode2
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_datanode_data_dir=file:///hadoop/dfs/data
+    volumes:
+      - type: bind
+        source: ./hadoop/datanode2
+        target: /hadoop/dfs/data
+    networks:
+      - hadoop
+    depends_on:
+      - namenode
+
+  datanode3:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode3
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_datanode_data_dir=file:///hadoop/dfs/data
+    volumes:
+      - type: bind
+        source: ./hadoop/datanode3
+        target: /hadoop/dfs/data
+    networks:
+      - hadoop
+    depends_on:
+      - namenode
+
+  # YARN Services
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    ports:
+      - "8088:8088"  # ResourceManager Web UI
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+      - YARN_CONF_yarn_resourcemanager_address=resourcemanager:8032
+      - YARN_CONF_yarn_resourcemanager_scheduler_address=resourcemanager:8030
+      - YARN_CONF_yarn_resourcemanager_resource_tracker_address=resourcemanager:8031
+    networks:
+      - hadoop
+    depends_on:
+      - namenode
+      - datanode1
+      - datanode2
+      - datanode3
+
+  nodemanager1:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager1
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    networks:
+      - hadoop
+    depends_on:
+      - resourcemanager
+
+  nodemanager2:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager2
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    networks:
+      - hadoop
+    depends_on:
+      - resourcemanager
+
+  nodemanager3:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager3
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    networks:
+      - hadoop
+    depends_on:
+      - resourcemanager
+
+  # Hive Services
+  hive-server:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-server
+    ports:
+      - "10000:10000"  # HiveServer2
+      - "10002:10002"  # Hive Web UI
+    environment:
+      - HIVE_CORE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore/metastore
+      - SERVICE_NAME=hiveserver2
+    volumes:
+      - type: bind
+        source: ./hive/warehouse
+        target: /opt/hive/warehouse
+    networks:
+      - hadoop
+    depends_on:
+      - hive-metastore
+      - namenode
+      - datanode1
+      - datanode2
+      - datanode3
+
+  hive-metastore:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-metastore
+    environment:
+      - SERVICE_NAME=metastore
+      - DB_TYPE=postgres
+      - POSTGRES_USER=hive
+      - POSTGRES_PASSWORD=hive
+      - POSTGRES_DB=metastore
+    volumes:
+      - type: bind
+        source: ./hive/metastore
+        target: /opt/hive/metastore_db
+    networks:
+      - hadoop
+
+  # Pig Service
+  pig-server:
+    image: bde2020/hadoop-base:2.0.0-hadoop3.2.1-java8
+    container_name: pig-server
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_replication=3
+      - HDFS_CONF_dfs_permissions_enabled=false
+    volumes:
+      - type: bind
+        source: ./pig/scripts
+        target: /pig/scripts
+    networks:
+      - hadoop
+    depends_on:
+      - namenode
+      - datanode1
+      - datanode2
+      - datanode3
+    command: >
+      bash -c "
+        apt-get update && apt-get install -y pig &&
+        tail -f /dev/null
+      "
+
+  # Mahout Service
+  mahout-server:
+    image: bde2020/hadoop-base:2.0.0-hadoop3.2.1-java8
+    container_name: mahout-server
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_replication=3
+      - HDFS_CONF_dfs_permissions_enabled=false
+    volumes:
+      - type: bind
+        source: ./mahout/scripts
+        target: /mahout/scripts
+      - type: bind
+        source: ./mahout/data
+        target: /mahout/data
+    networks:
+      - hadoop
+    depends_on:
+      - namenode
+      - datanode1
+      - datanode2
+      - datanode3
+    command: >
+      bash -c "
+        apt-get update && apt-get install -y maven &&
+        wget https://archive.apache.org/dist/mahout/0.13.0/apache-mahout-distribution-0.13.0.tar.gz &&
+        tar -xzf apache-mahout-distribution-0.13.0.tar.gz &&
+        mv apache-mahout-distribution-0.13.0 /opt/mahout &&
+        ln -s /opt/mahout/bin/mahout /usr/bin/mahout &&
+        tail -f /dev/null
+      "
+
+  # ZooKeeper Service
+  zookeeper:
+    image: zookeeper:3.8.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"  # Client port
+      - "2888:2888"  # Follower port
+      - "3888:3888"  # Election port
+    environment:
+      - ZOO_MY_ID=1
+      - ZOO_SERVERS=server.1=zookeeper:2888:3888
+    volumes:
+      - type: bind
+        source: ./zookeeper/data
+        target: /data
+      - type: bind
+        source: ./zookeeper/datalog
+        target: /datalog
+    networks:
+      - hadoop
+
+  # Oozie Service
+  oozie:
+    image: bde2020/hadoop-base:2.0.0-hadoop3.2.1-java8
+    container_name: oozie
+    ports:
+      - "11000:11000"  # Oozie Web UI
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_replication=3
+      - HDFS_CONF_dfs_permissions_enabled=false
+      - OOZIE_DB_TYPE=derby
+      - OOZIE_DB_URL=jdbc:derby:file:/oozie/data/derby;create=true
+      - OOZIE_DATA=/oozie/data
+      - OOZIE_CONF_DIR=/oozie/conf
+      - OOZIE_LOG_DIR=/oozie/logs
+      - OOZIE_WORKFLOW_DIR=/oozie/workflows
+    volumes:
+      - type: bind
+        source: ./oozie/data
+        target: /oozie/data
+      - type: bind
+        source: ./oozie/conf
+        target: /oozie/conf
+      - type: bind
+        source: ./oozie/logs
+        target: /oozie/logs
+      - type: bind
+        source: ./oozie/workflows
+        target: /oozie/workflows
+    networks:
+      - hadoop
+    depends_on:
+      - namenode
+      - datanode1
+      - datanode2
+      - datanode3
+      - resourcemanager
+      - nodemanager1
+      - nodemanager2
+      - nodemanager3
+      - hive-server
+      - pig-server
+      - zookeeper
+    command: >
+      bash -c "
+        apt-get update && apt-get install -y oozie &&
+        tail -f /dev/null
+      "
+
+networks:
+  hadoop:
+    driver: bridge 

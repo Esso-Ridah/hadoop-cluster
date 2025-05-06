@@ -1,0 +1,14 @@
+[2025-05-06T04:41:20.579+0000] {taskinstance.py:1157} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: movielens_ingestion.download_movielens_data manual__2025-05-06T01:09:27.363860+00:00 [queued]>
+[2025-05-06T04:41:20.595+0000] {taskinstance.py:1157} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: movielens_ingestion.download_movielens_data manual__2025-05-06T01:09:27.363860+00:00 [queued]>
+[2025-05-06T04:41:20.595+0000] {taskinstance.py:1359} INFO - Starting attempt 2 of 3
+[2025-05-06T04:41:20.614+0000] {taskinstance.py:1380} INFO - Executing <Task(PythonOperator): download_movielens_data> on 2025-05-06 01:09:27.363860+00:00
+[2025-05-06T04:41:20.622+0000] {standard_task_runner.py:57} INFO - Started process 1411 to run task
+[2025-05-06T04:41:20.626+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', 'movielens_ingestion', 'download_movielens_data', 'manual__2025-05-06T01:09:27.363860+00:00', '--job-id', '68', '--raw', '--subdir', 'DAGS_FOLDER/movielens_ingestion.py', '--cfg-path', '/tmp/tmplwmanhf6']
+[2025-05-06T04:41:20.629+0000] {standard_task_runner.py:85} INFO - Job 68: Subtask download_movielens_data
+[2025-05-06T04:41:20.651+0000] {logging_mixin.py:151} WARNING - /home/***/.local/lib/python3.8/site-packages/***/settings.py:195 DeprecationWarning: The sql_alchemy_conn option in [core] has been moved to the sql_alchemy_conn option in [database] - the old setting has been used, but please update your config.
+[2025-05-06T04:41:20.710+0000] {task_command.py:415} INFO - Running <TaskInstance: movielens_ingestion.download_movielens_data manual__2025-05-06T01:09:27.363860+00:00 [running]> on host 7cfed5a894a5
+[2025-05-06T04:41:20.862+0000] {taskinstance.py:1660} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='movielens_ingestion' AIRFLOW_CTX_TASK_ID='download_movielens_data' AIRFLOW_CTX_EXECUTION_DATE='2025-05-06T01:09:27.363860+00:00' AIRFLOW_CTX_TRY_NUMBER='2' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-05-06T01:09:27.363860+00:00'
+[2025-05-06T04:41:24.359+0000] {python.py:194} INFO - Done. Returned value was: /tmp/ml1m_618llp6_/ml-1m
+[2025-05-06T04:41:24.389+0000] {taskinstance.py:1398} INFO - Marking task as SUCCESS. dag_id=movielens_ingestion, task_id=download_movielens_data, execution_date=20250506T010927, start_date=20250506T044120, end_date=20250506T044124
+[2025-05-06T04:41:24.417+0000] {local_task_job_runner.py:228} INFO - Task exited with return code 0
+[2025-05-06T04:41:24.438+0000] {taskinstance.py:2776} INFO - 0 downstream tasks scheduled from follow-on schedule check

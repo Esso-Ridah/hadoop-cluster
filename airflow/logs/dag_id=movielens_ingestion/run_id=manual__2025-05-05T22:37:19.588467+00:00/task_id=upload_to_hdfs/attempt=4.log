@@ -1,0 +1,86 @@
+[2025-05-05T23:10:46.351+0000] {taskinstance.py:1157} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: movielens_ingestion.upload_to_hdfs manual__2025-05-05T22:37:19.588467+00:00 [queued]>
+[2025-05-05T23:10:46.362+0000] {taskinstance.py:1157} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: movielens_ingestion.upload_to_hdfs manual__2025-05-05T22:37:19.588467+00:00 [queued]>
+[2025-05-05T23:10:46.362+0000] {taskinstance.py:1359} INFO - Starting attempt 4 of 4
+[2025-05-05T23:10:46.376+0000] {taskinstance.py:1380} INFO - Executing <Task(PythonOperator): upload_to_hdfs> on 2025-05-05 22:37:19.588467+00:00
+[2025-05-05T23:10:46.382+0000] {standard_task_runner.py:57} INFO - Started process 1422 to run task
+[2025-05-05T23:10:46.385+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', 'movielens_ingestion', 'upload_to_hdfs', 'manual__2025-05-05T22:37:19.588467+00:00', '--job-id', '31', '--raw', '--subdir', 'DAGS_FOLDER/movielens_ingestion.py', '--cfg-path', '/tmp/tmpzuwvoqtl']
+[2025-05-05T23:10:46.387+0000] {standard_task_runner.py:85} INFO - Job 31: Subtask upload_to_hdfs
+[2025-05-05T23:10:46.401+0000] {logging_mixin.py:151} WARNING - /home/***/.local/lib/python3.8/site-packages/***/settings.py:195 DeprecationWarning: The sql_alchemy_conn option in [core] has been moved to the sql_alchemy_conn option in [database] - the old setting has been used, but please update your config.
+[2025-05-05T23:10:46.434+0000] {task_command.py:415} INFO - Running <TaskInstance: movielens_ingestion.upload_to_hdfs manual__2025-05-05T22:37:19.588467+00:00 [running]> on host 56aa4ba7abee
+[2025-05-05T23:10:46.514+0000] {taskinstance.py:1660} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='movielens_ingestion' AIRFLOW_CTX_TASK_ID='upload_to_hdfs' AIRFLOW_CTX_EXECUTION_DATE='2025-05-05T22:37:19.588467+00:00' AIRFLOW_CTX_TRY_NUMBER='4' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-05-05T22:37:19.588467+00:00'
+[2025-05-05T23:10:46.516+0000] {client.py:192} INFO - Instantiated <InsecureClient(url='http://172.20.0.2:50070')>.
+[2025-05-05T23:10:46.517+0000] {client.py:1028} INFO - Creating directories to '/user/***/movielens'.
+[2025-05-05T23:12:59.270+0000] {taskinstance.py:1935} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/urllib3/connection.py", line 174, in _new_conn
+    conn = connection.create_connection(
+  File "/home/airflow/.local/lib/python3.8/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/home/airflow/.local/lib/python3.8/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+TimeoutError: [Errno 110] Connection timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/urllib3/connectionpool.py", line 714, in urlopen
+    httplib_response = self._make_request(
+  File "/home/airflow/.local/lib/python3.8/site-packages/urllib3/connectionpool.py", line 415, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/home/airflow/.local/lib/python3.8/site-packages/urllib3/connection.py", line 244, in request
+    super(HTTPConnection, self).request(method, url, body=body, headers=headers)
+  File "/usr/local/lib/python3.8/http/client.py", line 1256, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/local/lib/python3.8/http/client.py", line 1302, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.8/http/client.py", line 1251, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/local/lib/python3.8/http/client.py", line 1011, in _send_output
+    self.send(msg)
+  File "/usr/local/lib/python3.8/http/client.py", line 951, in send
+    self.connect()
+  File "/home/airflow/.local/lib/python3.8/site-packages/urllib3/connection.py", line 205, in connect
+    conn = self._new_conn()
+  File "/home/airflow/.local/lib/python3.8/site-packages/urllib3/connection.py", line 186, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x72caec568a90>: Failed to establish a new connection: [Errno 110] Connection timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/requests/adapters.py", line 486, in send
+    resp = conn.urlopen(
+  File "/home/airflow/.local/lib/python3.8/site-packages/urllib3/connectionpool.py", line 798, in urlopen
+    retries = retries.increment(
+  File "/home/airflow/.local/lib/python3.8/site-packages/urllib3/util/retry.py", line 592, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='172.20.0.2', port=50070): Max retries exceeded with url: /webhdfs/v1/user/***/movielens?user.name=***&op=MKDIRS (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x72caec568a90>: Failed to establish a new connection: [Errno 110] Connection timed out'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/operators/python.py", line 192, in execute
+    return_value = self.execute_callable()
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/operators/python.py", line 209, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+  File "/opt/airflow/dags/movielens_ingestion.py", line 46, in upload_to_hdfs
+    client.makedirs(hdfs_path)
+  File "/home/airflow/.local/lib/python3.8/site-packages/hdfs/client.py", line 1029, in makedirs
+    self._mkdirs(hdfs_path, permission=permission)
+  File "/home/airflow/.local/lib/python3.8/site-packages/hdfs/client.py", line 125, in api_handler
+    raise err
+  File "/home/airflow/.local/lib/python3.8/site-packages/hdfs/client.py", line 102, in api_handler
+    res = client._request(
+  File "/home/airflow/.local/lib/python3.8/site-packages/hdfs/client.py", line 209, in _request
+    return self._session.request(
+  File "/home/airflow/.local/lib/python3.8/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/home/airflow/.local/lib/python3.8/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/home/airflow/.local/lib/python3.8/site-packages/requests/adapters.py", line 519, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='172.20.0.2', port=50070): Max retries exceeded with url: /webhdfs/v1/user/***/movielens?user.name=***&op=MKDIRS (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x72caec568a90>: Failed to establish a new connection: [Errno 110] Connection timed out'))
+[2025-05-05T23:12:59.282+0000] {taskinstance.py:1398} INFO - Marking task as FAILED. dag_id=movielens_ingestion, task_id=upload_to_hdfs, execution_date=20250505T223719, start_date=20250505T231046, end_date=20250505T231259
+[2025-05-05T23:12:59.296+0000] {standard_task_runner.py:104} ERROR - Failed to execute job 31 for task upload_to_hdfs (HTTPConnectionPool(host='172.20.0.2', port=50070): Max retries exceeded with url: /webhdfs/v1/user/***/movielens?user.name=***&op=MKDIRS (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x72caec568a90>: Failed to establish a new connection: [Errno 110] Connection timed out')); 1422)
+[2025-05-05T23:12:59.335+0000] {local_task_job_runner.py:228} INFO - Task exited with return code 1
+[2025-05-05T23:12:59.356+0000] {taskinstance.py:2776} INFO - 0 downstream tasks scheduled from follow-on schedule check

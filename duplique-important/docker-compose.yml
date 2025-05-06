@@ -1,0 +1,278 @@
+version: '3'
+
+services:
+  # Hadoop Services
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    ports:
+      - "9870:9870"  # Web UI
+      - "9000:9000"  # HDFS
+    environment:
+      - CLUSTER_NAME=hadoop-cluster
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_namenode_name_dir=file:///hadoop/dfs/name
+      - HDFS_CONF_dfs_replication=3
+      - HDFS_CONF_dfs_permissions_enabled=false
+      - HADOOP_CONF_CLUSTER_NAME=hadoop-cluster
+    volumes:
+      - ./hadoop/namenode:/hadoop/dfs/name
+    networks:
+      - hadoop
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9870"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    command: "/entrypoint.sh /run.sh"
+
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode1
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    volumes:
+      - ./hadoop/datanode1:/hadoop/dfs/data
+    networks:
+      - hadoop
+    depends_on:
+      - namenode
+
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode2
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    volumes:
+      - ./hadoop/datanode2:/hadoop/dfs/data
+    networks:
+      - hadoop
+    depends_on:
+      - namenode
+
+  datanode3:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode3
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    volumes:
+      - ./hadoop/datanode3:/hadoop/dfs/data
+    networks:
+      - hadoop
+    depends_on:
+      - namenode
+
+  # YARN Services
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    ports:
+      - "8088:8088"  # ResourceManager Web UI
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    networks:
+      - hadoop
+    depends_on:
+      - namenode
+
+  nodemanager1:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager1
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    networks:
+      - hadoop
+    depends_on:
+      - resourcemanager
+
+  nodemanager2:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager2
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    networks:
+      - hadoop
+    depends_on:
+      - resourcemanager
+
+  nodemanager3:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager3
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    networks:
+      - hadoop
+    depends_on:
+      - resourcemanager
+
+  # Hive Services
+  hive-server:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-server
+    ports:
+      - "10000:10000"  # HiveServer2
+      - "10002:10002"  # Hive Web UI
+    environment:
+      - HIVE_CORE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore/metastore
+      - SERVICE_NAME=hiveserver2
+    volumes:
+      - ./hive/warehouse:/opt/hive/warehouse
+    networks:
+      - hadoop
+    depends_on:
+      - hive-metastore
+
+  hive-metastore:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-metastore
+    environment:
+      - SERVICE_NAME=metastore
+      - DB_TYPE=postgres
+      - POSTGRES_USER=hive
+      - POSTGRES_PASSWORD=hive
+      - POSTGRES_DB=metastore
+    volumes:
+      - ./hive/metastore:/opt/hive/metastore_db
+    networks:
+      - hadoop
+
+  # Pig Service
+  pig-server:
+    image: bde2020/hadoop-base:2.0.0-hadoop3.2.1-java8
+    container_name: pig-server
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - PIG_HOME=/opt/pig
+      - PIG_CLASSPATH=/opt/hadoop/etc/hadoop
+    volumes:
+      - ./pig/scripts:/pig/scripts
+      - ./pig/install.sh:/install.sh
+    networks:
+      - hadoop
+    depends_on:
+      namenode:
+        condition: service_healthy
+      datanode1:
+        condition: service_started
+    command: ["bash", "/install.sh"]
+
+  # Mahout Service
+  mahout-server:
+    image: bde2020/hadoop-base:2.0.0-hadoop3.2.1-java8
+    container_name: mahout-server
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - MAHOUT_HOME=/opt/mahout
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+    volumes:
+      - ./mahout/scripts:/mahout/scripts
+      - ./mahout/data:/mahout/data
+      - ./mahout/install.sh:/install.sh
+    networks:
+      - hadoop
+    depends_on:
+      namenode:
+        condition: service_healthy
+      datanode1:
+        condition: service_started
+    command: ["bash", "/install.sh"]
+
+  # ZooKeeper Service
+  zookeeper:
+    image: zookeeper:3.8.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"  # Client port
+    networks:
+      - hadoop
+
+  # Airflow Services
+  airflow-postgres:
+    image: postgres:13
+    container_name: airflow-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - ./airflow/postgres-data:/var/lib/postgresql/data
+    networks:
+      - hadoop
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 10s
+      retries: 5
+
+  # Airflow Webserver
+  airflow-web:
+    build: ./airflow
+    image: custom-airflow:latest
+    container_name: airflow-web
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+      namenode:
+        condition: service_started
+      datanode1:
+        condition: service_started
+      datanode2:
+        condition: service_started
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+      AIRFLOW__WEBSERVER__PORT: 8080
+      AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "\
+        airflow db init && \
+        airflow users create \
+          --username admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@example.com \
+          --password admin \
+          || true && \
+        exec airflow webserver \
+      "
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      retries: 5
+    networks:
+      - hadoop
+
+  # Airflow Scheduler
+  airflow-scheduler:
+    image: custom-airflow:latest
+    container_name: airflow-scheduler
+    depends_on:
+      airflow-web:
+        condition: service_started
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+      AIRFLOW__WEBSERVER__PORT: 8080
+      AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+    command: scheduler
+    networks:
+      - hadoop
+
+networks:
+  hadoop:
+    driver: bridge 

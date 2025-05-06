@@ -1,0 +1,38 @@
+FROM apache/airflow:2.7.1
+
+USER root
+
+# Installation des dépendances système pour Kerberos
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        krb5-config \
+        libkrb5-dev \
+        libsasl2-dev \
+        libsasl2-modules-gssapi-mit && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Configuration des dossiers montés
+RUN mkdir -p /opt/airflow/dags \
+             /opt/airflow/logs \
+             /opt/airflow/plugins \
+             /opt/airflow/kerberos \
+    && chown -R airflow: /opt/airflow
+
+# Copie des fichiers de configuration Kerberos
+COPY kerberos/krb5.conf /etc/krb5.conf
+COPY kerberos/airflow.keytab /opt/airflow/kerberos/airflow.keytab
+RUN chown airflow: /opt/airflow/kerberos/airflow.keytab && \
+    chmod 600 /opt/airflow/kerberos/airflow.keytab
+
+USER airflow
+
+# Installation des dépendances Python
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir \
+      -r /tmp/requirements.txt \
+    && rm /tmp/requirements.txt
+
+# Configuration des variables d'environnement pour Kerberos
+ENV KRB5_CONFIG=/etc/krb5.conf
+ENV KRB5CCNAME=/tmp/krb5cc_airflow 

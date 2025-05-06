@@ -1,0 +1,8 @@
+requests==2.31.0
+apache-airflow-providers-apache-hdfs==3.3.1
+apache-airflow-providers-apache-hive==6.1.1
+apache-airflow-providers-apache-spark
+apache-airflow-providers-postgres
+requests-kerberos
+gssapi
+hdfs[avro,dataframe]>=2.5.4 

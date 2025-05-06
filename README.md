@@ -24,6 +24,53 @@ Le projet utilise les composants suivants :
 git clone [URL_DU_REPO]
 cd hadoop_weather_analysis
 ```
+# Installation et Démarrage de l'Environnement Hadoop-Airflow
+
+Ce guide vous aidera à mettre en place l'environnement de développement Hadoop avec Airflow.
+
+## Installation Rapide d'Airflow
+
+Si vous avez déjà cloné le repository et que vous voulez uniquement configurer Airflow, suivez ces étapes :
+
+```bash
+# 1. Créer les répertoires nécessaires pour Airflow
+mkdir -p airflow/dags
+mkdir -p airflow/logs
+mkdir -p airflow/plugins
+
+# 2. Construire et démarrer les services Airflow
+docker-compose -f docker-compose.dev.yml up -d --build
+
+# 3. Attendre que les services démarrent (environ 30 secondes)
+sleep 30
+
+# 4. Créer l'utilisateur admin pour Airflow
+docker exec -it airflow-web airflow users create \
+    --username admin \
+    --firstname Admin \
+    --lastname User \
+    --role Admin \
+    --email admin@example.com \
+    --password admin
+```
+
+Une fois ces étapes terminées, vous pouvez accéder à l'interface web d'Airflow :
+- URL : http://localhost:8080
+- Username : admin
+- Password : admin
+
+### Vérification de l'Installation Airflow
+
+```bash
+# Vérifier que les services Airflow sont en cours d'exécution
+docker ps | grep airflow
+
+# Vérifier les logs du webserver
+docker logs airflow-web
+
+# Vérifier les logs du scheduler
+docker logs airflow-scheduler
+```
 
 2. Démarrer l'environnement :
 ```bash
@@ -33,6 +80,17 @@ sudo docker-compose -f hadoop-cluster/docker-compose.yml up -d
 # Démarrer les services Airflow
 sudo docker-compose -f hadoop-cluster/docker-compose.dev.yml up -d
 ```
+### Commandes Utiles pour Airflow
+
+```bash
+# Arrêter les services Airflow
+docker-compose -f docker-compose.dev.yml down
+
+# Redémarrer les services Airflow
+docker-compose -f docker-compose.dev.yml up -d
+
+# Voir les logs en temps réel
+docker-compose -f docker-compose.dev.yml logs -f
 
 ## Structure du Projet
 

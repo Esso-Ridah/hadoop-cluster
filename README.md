@@ -53,7 +53,14 @@ docker exec -it airflow-web airflow users create \
     --email admin@example.com \
     --password admin
 ```
+2. Démarrer l'environnement :
+```bash
+# Démarrer les services Hadoop et Hive
+docker-compose up -d
 
+# Démarrer les services Airflow
+docker-compose -f docker-compose.dev.yml up -d
+```
 Une fois ces étapes terminées, vous pouvez accéder à l'interface web d'Airflow :
 - URL : http://localhost:8080
 - Username : admin
@@ -72,14 +79,7 @@ docker logs airflow-web
 docker logs airflow-scheduler
 ```
 
-2. Démarrer l'environnement :
-```bash
-# Démarrer les services Hadoop et Hive
-sudo docker-compose -f hadoop-cluster/docker-compose.yml up -d
 
-# Démarrer les services Airflow
-sudo docker-compose -f hadoop-cluster/docker-compose.dev.yml up -d
-```
 ### Commandes Utiles pour Airflow
 
 ```bash

@@ -585,6 +585,10 @@ Vérifier que tous les services sont en état "Up" :
 
 ### 2. Tester les Connexions
 
+créer un user: 
+```bash
+docker exec -it airflow-web airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin
+```
 1. Dans l'interface Airflow (http://localhost:8080) :
    - Activer le DAG `test_hdfs_connection`
    - Déclencher une exécution manuelle
